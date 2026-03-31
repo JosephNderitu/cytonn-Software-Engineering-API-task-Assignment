@@ -1,0 +1,223 @@
+{
+  "info": {
+    "name": "Task Manager API",
+    "_postman_id": "task-manager-api-collection",
+    "description": "Complete API collection for the Task Management Laravel API.\nBase URL: http://localhost:8080",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "1. Create Task (valid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix critical production bug\",\n  \"due_date\": \"2026-04-10\",\n  \"priority\": \"high\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Create Task (duplicate title+date — should 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix critical production bug\",\n  \"due_date\": \"2026-04-10\",\n  \"priority\": \"high\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Create Task (past due_date — should 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Old task\",\n  \"due_date\": \"2020-01-01\",\n  \"priority\": \"low\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. List All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            }
+          }
+        },
+        {
+          "name": "5. List Tasks — filter by status=pending",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"],
+              "query": [{ "key": "status", "value": "pending" }]
+            }
+          }
+        },
+        {
+          "name": "6. List Tasks — filter by status=in_progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks?status=in_progress",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"],
+              "query": [{ "key": "status", "value": "in_progress" }]
+            }
+          }
+        },
+        {
+          "name": "7. Update Status — pending → in_progress (Task ID 1)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "1", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}"
+            }
+          }
+        },
+        {
+          "name": "8. Update Status — in_progress → done (Task ID 1)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "1", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Update Status — skip pending→done (should 422)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/2/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "2", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}"
+            }
+          }
+        },
+        {
+          "name": "10. Delete Task — not done (should 403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "2"]
+            }
+          }
+        },
+        {
+          "name": "11. Delete Task — done (Task ID 1)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "1"]
+            }
+          }
+        },
+        {
+          "name": "12. BONUS — Daily Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/report?date=2026-04-10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "report"],
+              "query": [{ "key": "date", "value": "2026-04-10" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
