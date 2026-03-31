@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Task Manager DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "task_manager",
+      "Username": "task_user",
+      "Password": "secret123",
+      "SSLMode": "prefer",
+      "SavePassword": true
+    }
+  }
+}
