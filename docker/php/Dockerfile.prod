@@ -1,0 +1,84 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Production Dockerfile
+# Single container: PHP 8.3-FPM + Nginx + Supervisor
+# Render runs one container per service — so we bundle everything together.
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM php:8.3-fpm-alpine AS base
+
+# ─── System packages ──────────────────────────────────────────────────────────
+RUN apk add --no-cache \
+    bash \
+    curl \
+    nginx \
+    supervisor \
+    libpng-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    git \
+    oniguruma-dev \
+    postgresql-dev \
+    $PHPIZE_DEPS
+
+# ─── PHP extensions ───────────────────────────────────────────────────────────
+RUN docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    xml \
+    opcache
+
+# ─── PHP production settings ──────────────────────────────────────────────────
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.max_accelerated_files=10000" >> /usr/local/etc/php/conf.d/opcache.ini
+
+# ─── Composer ─────────────────────────────────────────────────────────────────
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+# ─── Nginx config ─────────────────────────────────────────────────────────────
+COPY docker/nginx/prod.conf /etc/nginx/nginx.conf
+
+# ─── Supervisor config ────────────────────────────────────────────────────────
+COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
+
+# ─── Copy application source ──────────────────────────────────────────────────
+WORKDIR /var/www
+COPY src/ .
+
+# ─── Install PHP dependencies (production only) ───────────────────────────────
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+# ─── Laravel bootstrap ────────────────────────────────────────────────────────
+RUN php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear
+
+# ─── Storage & cache permissions ─────────────────────────────────────────────
+RUN mkdir -p storage/logs \
+             storage/framework/cache \
+             storage/framework/sessions \
+             storage/framework/views \
+             bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
+# ─── Startup script ───────────────────────────────────────────────────────────
+COPY docker/php/start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 8080
+
+CMD ["/start.sh"]

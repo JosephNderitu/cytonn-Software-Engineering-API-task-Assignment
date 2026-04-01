@@ -1,0 +1,73 @@
+# ─── Render Blueprint ──────────────────────────────────────────────────────────
+# This file tells Render exactly how to build and run the Task Manager API.
+# Render reads this automatically when you connect your GitHub repo.
+
+services:
+  # ─── Web Service (Laravel + Nginx in one container) ───────────────────────
+  - type: web
+    name: task-manager-api
+    runtime: docker
+    dockerfilePath: ./docker/php/Dockerfile.prod
+    dockerContext: .
+    branch: main
+    autoDeploy: true
+
+    # ─── Health check ────────────────────────────────────────────────────────
+    healthCheckPath: /up
+
+    # ─── Environment variables ───────────────────────────────────────────────
+    # Set these in Render dashboard → Environment tab
+    # We list them here so Render knows what to expect
+    envVars:
+      - key: APP_NAME
+        value: "Task Manager API"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        fromService:
+          name: task-manager-api
+          type: web
+          property: host
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: task-manager-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: task-manager-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: task-manager-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: task-manager-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: task-manager-db
+          property: password
+      - key: APP_KEY
+        generateValue: true
+      - key: CACHE_STORE
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+  # ─── PostgreSQL Database ──────────────────────────────────────────────────
+databases:
+  - name: task-manager-db
+    databaseName: task_manager
+    user: task_user
+    plan: free
